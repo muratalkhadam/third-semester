@@ -1,5 +1,7 @@
 from FileReader import FileReader
-from time import time, sleep
+from time import time
+from itertools import count
+import os
 
 
 class StraightMerge:
@@ -10,8 +12,8 @@ class StraightMerge:
         self.file_b = file_b
         self.file_c = file_c
 
-    def __str__(self):
-        print(f"Sorting finished in {time() - self.start}")
+        self.clear_file(file_b)
+        self.clear_file(file_c)
 
     @staticmethod
     def clear_file(file):
@@ -26,6 +28,7 @@ class StraightMerge:
                 file.close()
                 return False
             next(file)
+        file.close()
         return True
 
     def distribute(self, serie_len):
@@ -35,15 +38,14 @@ class StraightMerge:
         b = open(self.file_b, "wb")
         c = open(self.file_c, "wb")
 
-        while a.next_num:
+        while a.curr:
             if counter % 2 == 0:
                 for i in range(serie_len):
-                    b.write(a.curr)
+                    b.write(next(a).to_bytes(32, byteorder="big"))
             else:
                 for i in range(serie_len):
-                    c.write(a.curr)
+                    c.write(next(a).to_bytes(32, byteorder="big"))
 
-            next(a)
             counter += 1
 
         a.close()
@@ -55,30 +57,23 @@ class StraightMerge:
         c = FileReader(self.file_c)
 
         with open(self.file_a, "wb") as binary_writer:
-            # while is not EOF
-            while not c.is_eof():
+            while b.curr and c.curr:
                 counter_b = 0
                 counter_c = 0
-
                 # собираю в зависимости от длины
-                while counter_b < serie_len and counter_c < serie_len:
-                    if b.curr <= c.curr:
-                        binary_writer.write(next(b))
+                while counter_b + counter_c != 2 * serie_len:
+                    if (b.curr <= c.curr and counter_b < serie_len) or counter_c == serie_len:
+                        binary_writer.write(b.curr.to_bytes(32, byteorder="big"))
                         counter_b += 1
-
-                        while counter_c < serie_len:
-                            binary_writer.write(next(c))
-                            counter_c += 1
-                    else:
-                        binary_writer.write(next(c))
+                        next(b)
+                    else:  # if b.curr > c.curr and counter_c < serie_len:
+                        binary_writer.write(c.curr.to_bytes(32, byteorder="big"))
                         counter_c += 1
+                        next(c)
 
-                        while counter_b < serie_len:
-                            binary_writer.write(next(b))
-                            counter_b += 1
-
-            while b.next_num:
-                binary_writer.write(next(b))
+            while b.curr:
+                binary_writer.write(b.curr.to_bytes(32, byteorder="big"))
+                next(b)
 
         binary_writer.close()
         b.close()
@@ -86,13 +81,36 @@ class StraightMerge:
 
     def sort(self):
         serie_len = 1
+        for i in count(1):
+            if self.is_sorted():
+                os.remove(self.file_b)
+                os.remove(self.file_c)
+                return
 
-        # for _ in range(1, int(log2(self.file_a_size / 32))):
-        while not self.is_sorted():
             self.distribute(serie_len)
-            print(f'Distrubion with the {serie_len} length successfully finish...')
-            sleep(10)
+            print(f"\nAfter distribution #{i}")
+            print("a: " + self.read(self.file_a))
+            print("b: " + self.read(self.file_b))
+            print("c: " + self.read(self.file_c))
+
             self.merge(serie_len)
-            print(f'Merging with the {serie_len} length successfully finish...')
+            print(f"\nAfter merging #{i}")
+            print("b: " + self.read(self.file_b))
+            print("c: " + self.read(self.file_c))
+            print("a: " + self.read(self.file_a))
 
             serie_len *= 2
+
+    @staticmethod
+    def read(path: str) -> str:
+        s = ""
+        f = FileReader(path)
+
+        for _ in range(50):
+            if not f.curr:
+                break
+            s += str(f.curr) + " "
+            next(f)
+
+        f.close()
+        return s
