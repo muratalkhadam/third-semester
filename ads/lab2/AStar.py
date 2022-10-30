@@ -1,14 +1,29 @@
+import psutil
+import os
+import func_timeout
+
 from queue import PriorityQueue
 from pyamaze import maze, agent
+from time import time
 
 
 # manhattan distance
 def h(point_a: tuple, point_b: tuple) -> int:
-    return abs(point_a[0] - point_b[0]) + abs(point_a[1] + point_b[1])
+    return abs(point_a[0] - point_b[0]) + abs(point_a[1] - point_b[1])
 
 
-def AStar(m: maze) -> dict:
+def search_astar(m: maze):
+    return func_timeout.func_timeout(60*30, AStar, args=[m])
+
+
+def AStar(m: maze):
+    start_time = time()
+
+    iterations = 0
+    states = []
+
     start = (m.rows, m.cols)
+    goal = (1, 1)
 
     g_score = {
         cell: float('inf')
@@ -20,18 +35,24 @@ def AStar(m: maze) -> dict:
         cell: float('inf')
         for cell in m.grid
     }
-    f_score[start] = 0 + h(start, (1, 1))
+    f_score[start] = 0 + h(start, goal)
 
-    open = PriorityQueue()
-    open.put((f_score[start], h(start, (1, 1)), start))
+    queue = PriorityQueue()
+    queue.put((f_score[start], h(start, goal), start))
 
     a_path = {}
 
-    while not open.empty():
-        current = open.get()[2]
+    while not queue.empty():
+        if psutil.Process(os.getpid()).memory_info().rss > 1024**3:
+            raise MemoryError("1 Gb memory exceeded")
 
-        if current == (1, 1):
+        iterations += 1
+        current = queue.get()[2]
+        if current == goal:
             break
+
+        if current not in states:
+            states.append(current)
 
         for dir in 'ESNW':
             if m.maze_map[current][dir] == 1:
@@ -50,32 +71,36 @@ def AStar(m: maze) -> dict:
                 if temp_f_score < f_score[neighbour]:
                     g_score[neighbour] = temp_g_score
                     f_score[neighbour] = temp_f_score
-                    open.put((temp_f_score, h(neighbour, start), neighbour))
+                    queue.put((temp_f_score, h(neighbour, start), neighbour))
                     a_path[neighbour] = current
 
     forward_path = {}
-    cell = (1, 1)
+    cell = goal
     while cell != start:
         forward_path[a_path[cell]] = cell
         cell = a_path[cell]
-    return forward_path
 
+    print(f"A* algo finised in {time() - start_time} seconds...")
+    print(f"{psutil.Process(os.getpid()).memory_info().rss / 1024**2} MB used...")
+    # print(f"Iterations: {a_iter}, unique states: {a_states}")
 
-def print_dict(dict):
-    for key, val in dict.items():
-        print(f"{key}: {val}")
+    amount_states = len(states)
+    return (forward_path, iterations, amount_states)
 
 
 if __name__ == '__main__':
-    m = maze(4, 4)
-    m.CreateMaze(loopPercent=0)
+    size1 = int(input("Enter size of the maze: "))
+    size2 = int(input("Enter size of the maze: "))
 
-    path = AStar(m)
+    m = maze(size1, size2)
+    m.CreateMaze(loopPercent=15)
 
-    print("Resulted path with the A* algo is:")
-    print_dict(path)
+    a_path, a_iter, a_states = search_astar(m)
+    print(f"Iterations: {a_iter}, unique states: {a_states}")
 
     a = agent(m, shape='arrow', filled=True, footprints=True)
-    m.tracePath({a: path}, delay=100)
+    m.tracePath({a: a_path}, delay=100)
 
     m.run()
+
+
