@@ -62,7 +62,8 @@ class StraightMerge:
                 counter_c = 0
                 # собираю в зависимости от длины
                 while counter_b + counter_c != 2 * serie_len:
-                    if (b.curr <= c.curr and counter_b < serie_len) or counter_c == serie_len:
+                    # if (b.curr <= c.curr and counter_b < serie_len) or counter_c == serie_len:
+                    if (b.curr >= c.curr and counter_b < serie_len) or counter_c == serie_len:
                         binary_writer.write(b.curr.to_bytes(32, byteorder="big"))
                         counter_b += 1
                         next(b)
