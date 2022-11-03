@@ -1,7 +1,5 @@
-from AStar import search_astar
-# from LDFS import search_ldfs
-
-from pyamaze import maze, agent, COLOR
+from AlgoSolver import ALgoSolver
+from pyamaze import maze, agent
 
 
 def main():
@@ -11,24 +9,29 @@ def main():
     m = maze(size, size)
     m.CreateMaze(loopPercent=loop_percent)
 
-    option = int(input("For A* algo pick 1,\n"
-                       "For LDFS - pick 2:\n"))
+    option = -1
+    while option != 1 and option != 2:
+        option = int(input("For A* algo pick 1,\n"
+                           "For LDFS - pick 2:\n"))
 
-    iter = 0
-    states = 0
+    algo = ALgoSolver(m)
     if option == 1:
-        # path = search_astar(m)
-        path, iter, states = search_astar(m)
-        agent_color = COLOR.blue
+        algo.search_AStar()
     else:
-        # path = search_ldfs(m)
-        # path, iter, states = search_ldfs(m)
-        # agent_color = COLOR.red
+        limit = int(input("Enter limit of depth or -1 for auto-limit: "))
+        limit = limit if limit else size**2//2
+        algo.search_LDFS(limit)
+        print(f"Number of stops is {algo.stops}")
+        if not algo.is_solvable:
+            print(f"There is no solution with the {limit} depth.")
 
-    print(f"Iterations: {iter}, unique states: {states}")
+    print(f"Iterations: {algo.iterations}, unique states: {algo.amount_of_states}")
 
-    a = agent(m, shape='arrow', filled=True, footprints=True, color=agent_color)
-    m.tracePath({a: path}, delay=100)
+    a = agent(m, shape='arrow', filled=True, footprints=True, color=algo.color)
+    m.tracePath({a: algo.path}, delay=100)
+
+    print(len(algo.path))
+
     m.run()
 
 
