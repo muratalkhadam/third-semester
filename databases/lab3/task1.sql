@@ -6,11 +6,12 @@ FROM patients;
 
 SELECT *
 FROM discounts
-WHERE percentage > 10 ;
+WHERE percentage > 10;
 
 SELECT *
 FROM patients
-WHERE gender = 'чоловік' or is_beneficiary;
+WHERE gender = 'чоловік'
+   or is_beneficiary;
 
 SELECT *
 FROM patients
@@ -18,13 +19,13 @@ WHERE not gender = 'жінка';
 
 SELECT *
 FROM patients
-WHERE gender = 'чоловік' and is_beneficiary;
+WHERE gender = 'чоловік'
+  and is_beneficiary;
 
 SELECT *
 FROM patients
 WHERE gender = 'чоловік' AND NOT is_beneficiary
-   OR
-    gender = 'жінка' AND is_beneficiary;
+   OR gender = 'жінка' AND is_beneficiary;
 
 SELECT medical_group
 FROM cards
