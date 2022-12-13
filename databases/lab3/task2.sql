@@ -66,7 +66,7 @@ FROM doctors AS d
          LEFT OUTER JOIN applications AS a
                          ON d.doctor_id = a.doctor_id
          LEFT OUTER JOIN patients AS p
-                         ON p.patient_id = a.patient_id
+                         ON p.patient_id = a.patient_id;
 
 SELECT concat(p.first_name, ' ', p.last_name) AS patient_fullname,
        c.established_diagnosis,
