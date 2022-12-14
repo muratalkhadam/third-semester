@@ -17,3 +17,13 @@ create table test
     primary key (test_id)
 );
 drop table if exists test;
+
+
+SELECT * from  cards;
+
+UPDATE cards
+set TEST = 1
+where patient_id = 14;
+
+alter table cards
+drop column TEST;

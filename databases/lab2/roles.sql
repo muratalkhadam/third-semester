@@ -18,7 +18,5 @@ grant select on admins to admin;
 create user if not exists doctor123 identified by 'test1';
 grant doctor to doctor123;
 
-
-
 create user if not exists admin123 identified by 'test2';
 grant admin to admin123;
