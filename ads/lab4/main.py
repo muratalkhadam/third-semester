@@ -31,7 +31,7 @@ def selection(fitness, num_parents, population):
 def crossover(parents, num_offsprings):
     offsprings = np.empty((num_offsprings, parents.shape[1]))
     crossover_point = int(parents.shape[1] / 2)
-    crossover_rate = 0.8
+    crossover_rate = 0.5
     i = 0
     while parents.shape[0] < num_offsprings:
         parent1_index = i % parents.shape[0]
@@ -49,7 +49,7 @@ def crossover(parents, num_offsprings):
 
 def mutation(offsprings):
     mutants = np.empty((offsprings.shape))
-    mutation_rate = 0.1
+    mutation_rate = 0.05
     for i in range(mutants.shape[0]):
         random_value = rd.random()
         mutants[i, :] = offsprings[i, :]
