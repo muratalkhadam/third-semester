@@ -9,10 +9,10 @@ import matplotlib.pyplot as plt
 def cal_fitness(weight, value, population, threshold):
     fitness = np.empty(population.shape[0])
     for i in range(population.shape[0]):
-        S1 = np.sum(population[i] * value)
-        S2 = np.sum(population[i] * weight)
-        if S2 <= threshold:
-            fitness[i] = S1
+        s1 = np.sum(population[i] * value)
+        s2 = np.sum(population[i] * weight)
+        if s2 <= threshold:
+            fitness[i] = s1
         else:
             fitness[i] = 0
     return fitness.astype(int)
