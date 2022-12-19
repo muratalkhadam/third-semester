@@ -30,7 +30,7 @@ def main():
     a = agent(m, shape='arrow', filled=True, footprints=True, color=algo.color)
     m.tracePath({a: algo.path}, delay=100)
 
-    print(len(algo.path))
+    print("Length of resulted path is", len(algo.path))
 
     m.run()
 
