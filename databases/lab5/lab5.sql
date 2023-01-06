@@ -173,3 +173,97 @@ BEGIN
 END $$
 DELIMITER ;
 SELECT get_table('patients');
+
+# 3
+DROP PROCEDURE IF EXISTS cur_demo;
+DELIMITER $$
+CREATE PROCEDURE cur_demo()
+BEGIN
+    DECLARE done TINYINT DEFAULT FALSE;
+    DECLARE cur_spec VARCHAR(40);
+
+    DECLARE cur CURSOR FOR
+        SELECT specialization FROM doctors;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN cur;
+
+    read_loop:
+    LOOP
+        FETCH cur INTO cur_spec;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+    END LOOP;
+
+    SELECT cur_spec;
+END $$
+DELIMITER ;
+CALL cur_demo();
+
+# 4 a
+DROP TRIGGER IF EXISTS trigger_delete;
+DELIMITER $$
+CREATE TRIGGER trigger_delete
+    BEFORE DELETE
+    ON admins
+    FOR EACH ROW
+BEGIN
+    IF (SELECT COUNT(*)
+        FROM admins
+        WHERE shift_number = OLD.shift_number) = 3 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'ВИ НЕ МОЖЕТЕ ВИДАЛИТИ АДМІНА, ТАК ЯК
+                                ЗАЛИШЕТЬСЯ ЛИШЕ 2 АДМІНА НА ЗМІНІ';
+    END IF;
+END $$
+DELIMITER ;
+# -------------
+DELETE
+FROM admins
+WHERE admin_id = 11;
+
+# 4 b
+DROP TRIGGER IF EXISTS trigger_update;
+DELIMITER $$
+CREATE TRIGGER trigger_update
+    BEFORE UPDATE
+    ON cards
+    FOR EACH ROW
+BEGIN
+    IF OLD.height != NEW.height OR
+       OLD.weight != NEW.weight
+    THEN
+        IF ROUND(NEW.weight / POW((NEW.height / 100), 2), 2) > 24.9 OR
+           ROUND(NEW.weight / POW((NEW.height / 100), 2), 2) < 18.5
+        THEN
+            SET NEW.medical_group = 'спеціальна';
+        END IF;
+    END IF;
+END $$
+DELIMITER ;
+# ---------------
+UPDATE cards
+SET height = 10
+WHERE patient_id = 27;
+
+# 4 c
+DROP TRIGGER IF EXISTS trigger_insert;
+DELIMITER $$
+CREATE TRIGGER trigger_insert
+    BEFORE INSERT
+    ON admins
+    FOR EACH ROW
+BEGIN
+    IF (SELECT COUNT(*)
+        FROM admins
+        WHERE shift_number = NEW.shift_number) > 1 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'ВИ НЕ МОЖЕТЕ ДОДАТИ АДМІНА НА ЦЮ ЗМІНУ, ТАК ЯК
+                                ВЖЕ МАЄТЬСЯ 2 AБО БІЛЬШЕ АДМІНІВ НА ЗМІНІ';
+    END IF;
+END $$
+DELIMITER ;
+# --------------
+INSERT INTO admins (first_name, last_name, regular_patients, shift_number)
+VALUES ('TEST-INSERT', 'TEST-INSERT', 0, 101);
