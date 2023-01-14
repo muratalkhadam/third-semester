@@ -2,7 +2,6 @@ import tkinter
 import customtkinter
 from DenseIndex import *
 
-
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("dark-blue")
 
@@ -20,7 +19,7 @@ class App(customtkinter.CTk):
 
         self.pack_widgets()
 
-        self.di = DenseIndex("data.txt", "index.txt")
+        self.di = DenseIndex("files/data.txt", "files/index.txt")
         self.di.build_index()
 
     def pack_widgets(self):
@@ -39,7 +38,8 @@ class App(customtkinter.CTk):
         self.key_entry = customtkinter.CTkEntry(self.key_value_entry_frame, placeholder_text="input your key here...")
         self.key_entry.grid(row=1, column=0)
 
-        self.value_entry = customtkinter.CTkEntry(self.key_value_entry_frame, placeholder_text="input your value here...")
+        self.value_entry = customtkinter.CTkEntry(self.key_value_entry_frame,
+                                                  placeholder_text="input your value here...")
         self.value_entry.grid(row=1, column=1)
 
         self.action_frame = customtkinter.CTkFrame(self)
@@ -86,7 +86,6 @@ class App(customtkinter.CTk):
         action_value = self.action.get()
         self.clear_area(self.info_area)
         if action_value:
-            # self.insert_area(self.info_area, "rabotaet")
             if action_value == "insert":
                 key_to_insert = self.key_entry.get()
                 value_to_insert = self.value_entry.get()
@@ -95,34 +94,35 @@ class App(customtkinter.CTk):
                 self.di.insert(record_to_insert)
 
                 self.insert_area(self.info_area,
-                                  f"Record with key {key_to_insert} was inserted with value {value_to_insert}")
+                                 f"Record with key {key_to_insert} was inserted with value {value_to_insert}")
             elif action_value == "delete":
                 key_to_delete = int(self.key_entry.get())
                 self.di.delete(key_to_delete)
 
+                self.di.build_index()
                 self.insert_area(self.info_area,
-                                  f"Founded record with key {key_to_delete} was deleted")
+                                 f"Founded record with key {key_to_delete} was deleted")
             elif action_value == "update":
                 key_to_update = int(self.key_entry.get())
                 value_to_update = self.value_entry.get()
 
-                self.di.update(f"{key_to_update}, {value_to_update}")
+                self.di.update(key_to_update, value_to_update)
+                self.di.build_index()
 
                 self.insert_area(self.info_area,
-                                  f"The value with {key_to_update} was updated by new value {value_to_update}")
+                                 f"The value with {key_to_update} was updated by new value {value_to_update}")
 
             elif action_value == "find":
-                self.insert_area(self.info_area, f"The value was founded with ... key...")
-                pass
+                key_to_find = int(self.key_entry.get())
+                print(key_to_find)
+
+                found_value = self.di.search(key_to_find).strip()
+                print(found_value)
+
+                self.insert_area(self.info_area, "The founded record is:\n"
+                                                 f"{found_value}")
         else:
             self.insert_area(self.info_area, "Pick the option firstly!")
-
-    def insert_in_index_file(self):
-        key_to_insert = self.key_entry.get()
-        value_to_insert = self.value_entry.get()
-
-        record_to_insert = f"{key_to_insert}, {value_to_insert}"
-        self.di.insert(record_to_insert)
 
 
 if __name__ == "__main__":
